@@ -6,11 +6,76 @@ datasource db {
   provider = "postgresql"
 }
 
-model Note {
-  id        String   @id @default(uuid())
-  title     String
-  bullets   Json
-  metadata  Json
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AudioStatus {
+  UPLOADED
+  TRANSCRIBING
+  TRANSCRIBED
+  FAILED
+}
+
+enum JobType {
+  AUDIO_UPLOAD
+  TRANSCRIPTION
+  POST_PROCESSING
+}
+
+enum ProcessingStatus {
+  INITIALIZED
+  PROCESSING
+  PROCESSED
+  FAILED
+}
+
+model User {
+  id            String          @id @default(uuid())
+  email         String          @unique
+  password_hash String
+  is_verified   Boolean
+  status        UserStatus
+  created_at    DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  sessions      Session[]
+  audioRecords  Audio_Records[]
+}
+
+model Session {
+  id                 String    @id @default(uuid())
+  user_id            String
+  user               User      @relation(fields: [user_id], references: [id])
+  refresh_token_hash String
+  user_agent         String
+  ip_address         String
+  created_at         DateTime  @default(now())
+  expires_at         DateTime
+  revoked_at         DateTime?
+}
+
+model Audio_Records {
+  id             String            @id @default(uuid())
+  user_id        String
+  user           User              @relation(fields: [user_id], references: [id])
+  audio_url      String
+  duration       Int
+  language       String
+  status         AudioStatus
+  created_at     DateTime          @default(now())
+  processingJobs Processing_Jobs[]
+}
+
+model Processing_Jobs {
+  id              String           @id @default(uuid())
+  audio_record_id String
+  audio           Audio_Records    @relation(fields: [audio_record_id], references: [id])
+  job_type        JobType
+  status          ProcessingStatus
+  attempts        Int
+  error_message   String?
+  created_at      DateTime         @default(now())
+  started_at      DateTime?
+  finished_at     DateTime?
 }
