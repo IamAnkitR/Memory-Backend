@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import { env } from "./config/env";
+import audioRoutes from "./routes/audio.routes";
 import cookieParser from "cookie-parser";
 import routes from "./routes";
 
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/v1", routes);
+app.use("/audio", audioRoutes);
 
 app.get("/health", (_, res) => {
   res.json({ status: "ok" });
