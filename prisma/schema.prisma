@@ -32,16 +32,56 @@ enum ProcessingStatus {
   FAILED
 }
 
+enum VoiceTone {
+  neutral
+  calm
+  energetic
+}
+
+enum Language {
+  en
+  hi
+}
+
+enum ActivityType {
+  AUTH
+  AUDIO
+  TRANSCRIPTION
+  SETTINGS
+  SYSTEM
+  ADMIN
+}
+
 model User {
   id            String          @id @default(uuid())
   email         String          @unique
   password_hash String
   is_verified   Boolean
   status        UserStatus
-  created_at    DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
   sessions      Session[]
   audioRecords  Audio_Records[]
+  settings      UserSettings?
+  activities    Activity[]
+  created_at    DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model UserSettings {
+  id                 String    @id @default(uuid())
+  userId             String    @unique
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language           Language  @default(en)
+  timezone           String    @default("UTC")
+  voiceEnabled       Boolean   @default(true)
+  voiceSpeed         Float     @default(1.0)
+  voiceTone          VoiceTone @default(neutral)
+  autoTranscription  Boolean   @default(true)
+  emailNotifications Boolean   @default(true)
+  pushNotifications  Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([userId])
 }
 
 model Session {
@@ -83,4 +123,21 @@ model Processing_Jobs {
   created_at      DateTime         @default(now())
   started_at      DateTime?
   finished_at     DateTime?
+}
+
+model Activity {
+  id         String       @id @default(uuid())
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       ActivityType
+  action     String
+  entityId   String?
+  entityType String?
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime     @default(now())
+
+  @@index([userId, createdAt])
+  @@index([type])
 }

@@ -3,3 +3,4 @@ venv/
 .env
 uploads/
 whisper-service/temp_audio/
+.vscode/
